@@ -89,19 +89,16 @@ College-Placement-Prediction/
 ├── .gitignore
 ├── .dockerignore
 ├── Dockerfile                    # API container (multi-stage)
-├── Dockerfile.streamlit          # Dashboard container
 ├── docker-compose.yml            # Orchestration
 ├── config.py                     # Centralized configuration
 ├── app.py                        # Flask API (production)
+├── api_routes.py                 # Modular blueprint for AI intelligence features
 ├── wsgi.py                       # WSGI entry point
 ├── gunicorn.conf.py              # Gunicorn settings
 ├── model_building.py             # Enhanced training pipeline
 ├── model.pkl                     # Trained model
 ├── model_metadata.json           # Model version & metrics
-├── streamlit_app.py              # Dashboard UI
-├── test_client.py                # Manual API test script
 ├── requirements.txt              # Pinned dependencies
-├── College_placement.csv         # Training dataset
 └── README.md
 ```
 
@@ -255,23 +252,21 @@ curl http://localhost:5000/health
 ```text
                 ┌──────────────────────────────────────────┐
                 │           GitHub Actions CI/CD            │
-                │      Lint → Test → Build → Deploy         │
+                │         Lint → Test → Docker Build        │
                 └──────────────┬───────────────────────────┘
                                │
                 ┌──────────────▼───────────────────────────┐
-                │              Docker Compose               │
+                │            Enterprise Platform           │
                 │  ┌─────────────┐    ┌─────────────────┐  │
-                │  │  Flask API  │    │   Streamlit UI   │  │
-                │  │  (Gunicorn) │    │   (Dashboard)    │  │
-                │  │  Port 5000  │    │   Port 8501      │  │
-                │  └──────┬──────┘    └────────┬─────────┘  │
-                │         │                    │            │
-                │         └────────┬───────────┘            │
-                │                  │                        │
-                │          ┌───────▼────────┐               │
-                │          │   model.pkl    │               │
-                │          │   (Versioned)  │               │
-                │          └────────────────┘               │
+                │  │  Flask API  │◄───┤   React 19 SPA  │  │
+                │  │  (Gunicorn) │    │  (Vite + Glass) │  │
+                │  │  Port 5000  │    │   Port 3000     │  │
+                │  └──────┬──────┘    └─────────────────┘  │
+                │         │                                │
+                │  ┌──────▼────────┐  ┌─────────────────┐  │
+                │  │   model.pkl   │  │   SQL Database  │  │
+                │  │  (Explainable)│  │ (SQLite / PgSQL)│  │
+                │  └───────────────┘  └─────────────────┘  │
                 └──────────────────────────────────────────┘
 ```
 

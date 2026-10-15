@@ -91,11 +91,6 @@ jobs:
           docker build -t placement-api:${{ github.sha }} .
           docker build -t placement-api:latest .
 
-      - name: Build Streamlit image
-        run: |
-          docker build -f Dockerfile.streamlit -t placement-ui:${{ github.sha }} .
-          docker build -f Dockerfile.streamlit -t placement-ui:latest .
-
       - name: Verify containers start
         run: |
           docker run -d --name test-api -p 5000:5000 placement-api:latest

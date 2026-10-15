@@ -23,17 +23,6 @@ services:
       retries: 3
       start_period: 10s
 
-  streamlit:
-    build:
-      context: .
-      dockerfile: Dockerfile.streamlit
-    container_name: placement-ui
-    ports:
-      - "8501:8501"
-    depends_on:
-      api:
-        condition: service_healthy
-    restart: unless-stopped
 
 # Optional: Add volumes for persistent logging
 # volumes:
