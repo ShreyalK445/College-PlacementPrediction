@@ -1,0 +1,71 @@
+.simulator-container {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.sim-comparison-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+.sim-metric-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-glass);
+  border-radius: var(--radius-md);
+  padding: 1.5rem;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.sim-metric-card.baseline {
+  border-left: 4px solid var(--accent-violet);
+}
+
+.sim-metric-card.hypothetical {
+  border-left: 4px solid var(--accent-cyan);
+}
+
+.delta-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.3rem 0.8rem;
+  border-radius: 99px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  margin-top: 0.5rem;
+}
+
+.delta-badge.positive {
+  background: rgba(16, 185, 129, 0.2);
+  color: var(--accent-emerald);
+}
+
+.delta-badge.negative {
+  background: rgba(244, 63, 94, 0.2);
+  color: var(--accent-rose);
+}
+
+.modified-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.mod-chip {
+  background: rgba(6, 182, 212, 0.1);
+  border: 1px solid rgba(6, 182, 212, 0.3);
+  padding: 0.25rem 0.6rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.78rem;
+  color: var(--accent-cyan);
+}
+
+@media (max-width: 768px) {
+  .sim-comparison-grid {
+    grid-template-columns: 1fr;
+  }
+}
