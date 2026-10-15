@@ -154,9 +154,11 @@ JOB_ROLES: Dict[str, Dict[str, Any]] = {
     },
 }
 
+
 def normalize_skill(skill: str) -> str:
     """Helper to normalize skill string for fuzzy matching."""
     return "".join(c.lower() for c in skill if c.isalnum() or c in ("+", "#"))
+
 
 def match_role(student_profile: Dict[str, Any], role_key: str) -> Dict[str, Any]:
     """
@@ -182,7 +184,11 @@ def match_role(student_profile: Dict[str, Any], role_key: str) -> Dict[str, Any]
         req_norm = normalize_skill(req)
         matched = False
         for decl_norm, original in normalized_declared.items():
-            if decl_norm in req_norm or req_norm in decl_norm or any(part in req_norm for part in decl_norm.split()):
+            if (
+                decl_norm in req_norm
+                or req_norm in decl_norm
+                or any(part in req_norm for part in decl_norm.split())
+            ):
                 matched = True
                 matched_core.append(req)
                 break
@@ -237,6 +243,7 @@ def match_role(student_profile: Dict[str, Any], role_key: str) -> Dict[str, Any]
             "It is distinctly separate from company hiring probability or placement guarantees."
         ),
     }
+
 
 def match_all_roles(student_profile: Dict[str, Any]) -> List[Dict[str, Any]]:
     """Evaluates the student against all supported job roles for comparative analysis."""

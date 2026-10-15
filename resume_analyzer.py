@@ -3,28 +3,75 @@ Resume Analyzer & Job Description Matcher
 Extracts technical credentials from PDF and plain-text resumes and benchmarks against job descriptions.
 """
 
-from typing import Dict, List, Any
+from typing import Dict, Any
 import io
 import re
 from pypdf import PdfReader
 
 # Master taxonomy of industry skills for entity extraction
 TECH_SKILLS = [
-    "Python", "Java", "C++", "C", "JavaScript", "TypeScript", "React", "Node.js",
-    "SQL", "PostgreSQL", "MySQL", "MongoDB", "Redis",
-    "HTML", "CSS", "REST APIs", "FastAPI", "Flask", "Django", "Spring Boot",
-    "Docker", "Kubernetes", "AWS", "Azure", "GCP", "Git", "GitHub", "CI/CD",
-    "Linux", "Pandas", "NumPy", "Scikit-Learn", "TensorFlow", "PyTorch",
-    "Power BI", "Tableau", "Excel", "Data Structures", "Algorithms",
-    "Machine Learning", "Deep Learning", "Data Visualization", "Selenium",
-    "PyTest", "System Design", "Agile", "Scrum",
+    "Python",
+    "Java",
+    "C++",
+    "C",
+    "JavaScript",
+    "TypeScript",
+    "React",
+    "Node.js",
+    "SQL",
+    "PostgreSQL",
+    "MySQL",
+    "MongoDB",
+    "Redis",
+    "HTML",
+    "CSS",
+    "REST APIs",
+    "FastAPI",
+    "Flask",
+    "Django",
+    "Spring Boot",
+    "Docker",
+    "Kubernetes",
+    "AWS",
+    "Azure",
+    "GCP",
+    "Git",
+    "GitHub",
+    "CI/CD",
+    "Linux",
+    "Pandas",
+    "NumPy",
+    "Scikit-Learn",
+    "TensorFlow",
+    "PyTorch",
+    "Power BI",
+    "Tableau",
+    "Excel",
+    "Data Structures",
+    "Algorithms",
+    "Machine Learning",
+    "Deep Learning",
+    "Data Visualization",
+    "Selenium",
+    "PyTest",
+    "System Design",
+    "Agile",
+    "Scrum",
 ]
 
 SOFT_SKILLS = [
-    "Communication", "Leadership", "Teamwork", "Problem Solving",
-    "Critical Thinking", "Adaptability", "Time Management", "Collaboration",
-    "Conflict Resolution", "Presentation",
+    "Communication",
+    "Leadership",
+    "Teamwork",
+    "Problem Solving",
+    "Critical Thinking",
+    "Adaptability",
+    "Time Management",
+    "Collaboration",
+    "Conflict Resolution",
+    "Presentation",
 ]
+
 
 def extract_text_from_pdf(file_stream: io.BytesIO) -> str:
     """Extracts raw text from a PDF stream using pypdf."""
@@ -37,10 +84,13 @@ def extract_text_from_pdf(file_stream: io.BytesIO) -> str:
                 text_parts.append(page_text)
         full_text = "\n".join(text_parts).strip()
         if not full_text:
-            raise ValueError("PDF appears to be scanned or contains no extractable text.")
+            raise ValueError(
+                "PDF appears to be scanned or contains no extractable text."
+            )
         return full_text
     except Exception as exc:
         raise ValueError(f"Failed to read PDF resume: {str(exc)}")
+
 
 def analyze_resume_text(text: str) -> Dict[str, Any]:
     """
@@ -64,13 +114,21 @@ def analyze_resume_text(text: str) -> Dict[str, Any]:
 
     # Extract email and phone
     email_match = re.search(r"[\w\.-]+@[\w\.-]+\.\w+", text)
-    phone_match = re.search(r"(\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}", text)
+    phone_match = re.search(
+        r"(\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}", text
+    )
 
     # Detect presence of key sections
     has_projects = bool(re.search(r"\b(projects?|capstones?|portfolio)\b", text_lower))
-    has_internship = bool(re.search(r"\b(internship|work experience|employment|experience)\b", text_lower))
-    has_education = bool(re.search(r"\b(education|b\.?tech|bachelor|degree|gpa|cgpa)\b", text_lower))
-    has_certifications = bool(re.search(r"\b(certifications?|certificates?|credentials?)\b", text_lower))
+    has_internship = bool(
+        re.search(r"\b(internship|work experience|employment|experience)\b", text_lower)
+    )
+    has_education = bool(
+        re.search(r"\b(education|b\.?tech|bachelor|degree|gpa|cgpa)\b", text_lower)
+    )
+    has_certifications = bool(
+        re.search(r"\b(certifications?|certificates?|credentials?)\b", text_lower)
+    )
 
     # Calculate overall resume structural strength score (out of 100)
     score = 0
@@ -84,15 +142,25 @@ def analyze_resume_text(text: str) -> Dict[str, Any]:
     # Suggested resume enhancements
     improvements = []
     if len(matched_tech) < 5:
-        improvements.append("Expand your technical skills section with specific frameworks, databases, and tooling.")
+        improvements.append(
+            "Expand your technical skills section with specific frameworks, databases, and tooling."
+        )
     if not has_projects:
-        improvements.append("Add a dedicated 'Projects' section with quantified achievements (e.g. latency, users, tests).")
+        improvements.append(
+            "Add a dedicated 'Projects' section with quantified achievements (e.g. latency, users, tests)."
+        )
     if not has_internship:
-        improvements.append("Highlight open-source contributions or academic research to demonstrate practical code experience.")
+        improvements.append(
+            "Highlight open-source contributions or academic research to demonstrate practical code experience."
+        )
     if not has_certifications:
-        improvements.append("Consider earning an industry-recognized cloud or developer certification.")
+        improvements.append(
+            "Consider earning an industry-recognized cloud or developer certification."
+        )
     if not improvements:
-        improvements.append("Resume contains balanced technical coverage and key functional sections.")
+        improvements.append(
+            "Resume contains balanced technical coverage and key functional sections."
+        )
 
     return {
         "extracted_contact": {
@@ -112,6 +180,7 @@ def analyze_resume_text(text: str) -> Dict[str, Any]:
         "word_count": len(text.split()),
     }
 
+
 def match_resume_with_jd(resume_text: str, jd_text: str) -> Dict[str, Any]:
     """
     Compares extracted resume skills directly against a target job description.
@@ -126,7 +195,9 @@ def match_resume_with_jd(resume_text: str, jd_text: str) -> Dict[str, Any]:
         if re.search(pattern, jd_lower):
             jd_skills.append(skill)
 
-    resume_all_skills = set(resume_analysis["technical_skills"] + resume_analysis["soft_skills"])
+    resume_all_skills = set(
+        resume_analysis["technical_skills"] + resume_analysis["soft_skills"]
+    )
     matching_skills = [s for s in jd_skills if s in resume_all_skills]
     missing_skills = [s for s in jd_skills if s not in resume_all_skills]
 
@@ -134,11 +205,17 @@ def match_resume_with_jd(resume_text: str, jd_text: str) -> Dict[str, Any]:
 
     recommendations = []
     if missing_skills:
-        recommendations.append(f"Incorporate or acquire these missing keywords required by the JD: {', '.join(missing_skills[:5])}.")
+        recommendations.append(
+            f"Incorporate or acquire these missing keywords required by the JD: {', '.join(missing_skills[:5])}."
+        )
     if match_pct >= 75:
-        recommendations.append("High alignment with job description! Tailor bullet points to emphasize impact metrics.")
+        recommendations.append(
+            "High alignment with job description! Tailor bullet points to emphasize impact metrics."
+        )
     else:
-        recommendations.append("Moderate alignment. Customize your summary and project descriptions to mirror role terminology.")
+        recommendations.append(
+            "Moderate alignment. Customize your summary and project descriptions to mirror role terminology."
+        )
 
     return {
         "job_description_skills_detected": jd_skills,

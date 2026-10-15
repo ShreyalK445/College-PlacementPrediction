@@ -7,7 +7,6 @@ import pickle
 
 import numpy as np
 import pandas as pd
-import pytest
 from sklearn.ensemble import RandomForestClassifier
 
 
@@ -79,9 +78,14 @@ class TestModelPrediction:
         df = pd.DataFrame(
             np.random.rand(3, 8),
             columns=[
-                "IQ", "Prev_Sem_Result", "CGPA", "Academic_Performance",
-                "Extra_Curricular_Score", "Communication_Skills",
-                "Projects_Completed", "Internship_Experience",
+                "IQ",
+                "Prev_Sem_Result",
+                "CGPA",
+                "Academic_Performance",
+                "Extra_Curricular_Score",
+                "Communication_Skills",
+                "Projects_Completed",
+                "Internship_Experience",
             ],
         )
         preds = model.predict(df)

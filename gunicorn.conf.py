@@ -19,8 +19,8 @@ timeout = 120
 keepalive = 5
 
 # Logging
-accesslog = "-"           # stdout
-errorlog = "-"            # stderr
+accesslog = "-"  # stdout
+errorlog = "-"  # stderr
 loglevel = os.getenv("LOG_LEVEL", "info").lower()
 
 # Security

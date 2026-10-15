@@ -25,13 +25,16 @@ WORKDIR /app
 COPY --from=builder /install /usr/local
 
 # Copy application code
-COPY config.py app.py wsgi.py gunicorn.conf.py ./
+COPY *.py ./
 COPY model.pkl model_metadata.json* ./
 
 # Set environment
 ENV FLASK_ENV=production \
     PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
+
+# Ensure appuser owns /app directory for local SQLite DB and runtime files
+RUN chown -R appuser:appuser /app
 
 # Switch to non-root user
 USER appuser

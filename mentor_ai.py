@@ -5,9 +5,13 @@ Context-aware intelligent assistant with LLM integration and robust rule-based f
 
 from typing import Dict, List, Any
 import os
-import re
 
-def ask_mentor(message: str, student_context: Dict[str, Any] = None, conversation_history: List[Dict[str, str]] = None) -> Dict[str, Any]:
+
+def ask_mentor(
+    message: str,
+    student_context: Dict[str, Any] = None,
+    conversation_history: List[Dict[str, str]] = None,
+) -> Dict[str, Any]:
     """
     Handles student mentoring queries.
     Uses OpenAI/External LLM if API key is present in environment, otherwise falls back
@@ -15,12 +19,17 @@ def ask_mentor(message: str, student_context: Dict[str, Any] = None, conversatio
     """
     clean_msg = message.strip()
     if not clean_msg:
-        return {"reply": "Please ask a question regarding your placement preparation, resume, or assessment results.", "source": "system"}
+        return {
+            "reply": "Please ask a question regarding your placement preparation, resume, or assessment results.",
+            "source": "system",
+        }
 
     openai_key = os.environ.get("OPENAI_API_KEY")
     if openai_key and not openai_key.startswith("your-") and len(openai_key) > 20:
         try:
-            return _call_external_llm(clean_msg, student_context, conversation_history, openai_key)
+            return _call_external_llm(
+                clean_msg, student_context, conversation_history, openai_key
+            )
         except Exception:
             # Fall through gracefully to domain mentor
             pass
@@ -29,7 +38,13 @@ def ask_mentor(message: str, student_context: Dict[str, Any] = None, conversatio
     reply = _rule_based_career_mentor(clean_msg, student_context or {})
     return {"reply": reply, "source": "domain_mentor_engine"}
 
-def _call_external_llm(message: str, student_context: Dict[str, Any], history: List[Dict[str, str]], api_key: str) -> Dict[str, Any]:
+
+def _call_external_llm(
+    message: str,
+    student_context: Dict[str, Any],
+    history: List[Dict[str, str]],
+    api_key: str,
+) -> Dict[str, Any]:
     """Calls OpenAI chat completion API with timeout and safe prompt framing."""
     import requests
 
@@ -49,13 +64,23 @@ def _call_external_llm(message: str, student_context: Dict[str, Any], history: L
     messages = [{"role": "system", "content": system_prompt}]
     if history:
         for turn in history[-6:]:
-            messages.append({"role": turn.get("role", "user"), "content": turn.get("content", "")})
+            messages.append(
+                {"role": turn.get("role", "user"), "content": turn.get("content", "")}
+            )
     messages.append({"role": "user", "content": message})
 
     resp = requests.post(
         "https://api.openai.com/v1/chat/completions",
-        headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
-        json={"model": "gpt-4o-mini", "messages": messages, "max_tokens": 600, "temperature": 0.7},
+        headers={
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json",
+        },
+        json={
+            "model": "gpt-4o-mini",
+            "messages": messages,
+            "max_tokens": 600,
+            "temperature": 0.7,
+        },
         timeout=10,
     )
     if resp.status_code == 200:
@@ -64,6 +89,7 @@ def _call_external_llm(message: str, student_context: Dict[str, Any], history: L
         return {"reply": reply_text, "source": "openai_llm"}
     else:
         raise RuntimeError(f"LLM API returned status {resp.status_code}")
+
 
 def _rule_based_career_mentor(msg: str, ctx: Dict[str, Any]) -> str:
     """Domain-trained deterministic career advisor matching user intentions."""
@@ -88,7 +114,15 @@ def _rule_based_career_mentor(msg: str, ctx: Dict[str, Any]) -> str:
         )
 
     # 2. Technical Interview Questions
-    if any(k in q for k in ["technical question", "coding question", "mock technical", "interview question"]):
+    if any(
+        k in q
+        for k in [
+            "technical question",
+            "coding question",
+            "mock technical",
+            "interview question",
+        ]
+    ):
         return (
             "### 💻 Technical Interview Practice Questions\n\n"
             "Here are 3 core placement interview problems frequently tested by campus recruiters:\n\n"
@@ -101,7 +135,16 @@ def _rule_based_career_mentor(msg: str, ctx: Dict[str, Any]) -> str:
         )
 
     # 3. HR / Behavioral Questions
-    if any(k in q for k in ["hr", "behavioral", "star method", "tell me about yourself", "weakness"]):
+    if any(
+        k in q
+        for k in [
+            "hr",
+            "behavioral",
+            "star method",
+            "tell me about yourself",
+            "weakness",
+        ]
+    ):
         return (
             "### 🤝 Behavioral HR Interview Strategy (The STAR Method)\n\n"
             "When responding to behavioral questions, structure your response as follows:\n\n"
@@ -116,7 +159,16 @@ def _rule_based_career_mentor(msg: str, ctx: Dict[str, Any]) -> str:
         )
 
     # 4. Assessment / Placement Prediction Context
-    if any(k in q for k in ["my prediction", "why not placed", "at-risk", "improve my score", "placement probability"]):
+    if any(
+        k in q
+        for k in [
+            "my prediction",
+            "why not placed",
+            "at-risk",
+            "improve my score",
+            "placement probability",
+        ]
+    ):
         return (
             f"### 📈 Diagnostics Based on Your Assessment Profile\n\n"
             f"- **Cumulative GPA:** {cgpa} / 10.0\n"

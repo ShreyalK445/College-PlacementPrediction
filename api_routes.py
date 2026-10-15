@@ -11,7 +11,6 @@ import pandas as pd
 from models import (
     get_db_session,
     User,
-    AssessmentRecord,
     RoadmapTask,
     MockAssessmentAttempt,
     MentorIntervention,
@@ -23,19 +22,27 @@ from job_matching import JOB_ROLES, match_role, match_all_roles
 from mentor_ai import ask_mentor
 from assessment_engine import get_test_catalog, get_test_questions, grade_test
 from simulator_engine import run_simulation
-from resume_analyzer import extract_text_from_pdf, analyze_resume_text, match_resume_with_jd
+from resume_analyzer import (
+    extract_text_from_pdf,
+    analyze_resume_text,
+    match_resume_with_jd,
+)
 from mentor_dashboard import get_tpo_cohort_summary, export_cohort_to_csv
 from model_monitoring import get_calibration_and_quality_metrics, detect_input_drift
 
 api_bp = Blueprint("career_api", __name__, url_prefix="/api")
 
+
 def get_model_from_app():
     from flask import current_app
+
     return current_app.config.get("ML_MODEL")
+
 
 # ---------------------------------------------------------------------------
 # 1. Authentication Endpoints
 # ---------------------------------------------------------------------------
+
 
 @api_bp.route("/auth/register", methods=["POST"])
 def register():
@@ -59,11 +66,14 @@ def register():
     session.commit()
 
     token = generate_token(user)
-    return jsonify({
-        "message": "User registered successfully",
-        "token": token,
-        "user": user.to_dict(),
-    }), 201
+    return jsonify(
+        {
+            "message": "User registered successfully",
+            "token": token,
+            "user": user.to_dict(),
+        }
+    ), 201
+
 
 @api_bp.route("/auth/login", methods=["POST"])
 def login():
@@ -81,20 +91,25 @@ def login():
         return jsonify({"error": "Invalid email or password."}), 401
 
     token = generate_token(user)
-    return jsonify({
-        "message": "Login successful",
-        "token": token,
-        "user": user.to_dict(),
-    }), 200
+    return jsonify(
+        {
+            "message": "Login successful",
+            "token": token,
+            "user": user.to_dict(),
+        }
+    ), 200
+
 
 @api_bp.route("/auth/me", methods=["GET"])
 @require_jwt_auth(optional=False)
 def get_me():
     return jsonify({"user": g.current_user.to_dict()}), 200
 
+
 # ---------------------------------------------------------------------------
 # 2. Explainable AI Endpoint
 # ---------------------------------------------------------------------------
+
 
 @api_bp.route("/explain", methods=["POST"])
 def explain_prediction():
@@ -121,9 +136,11 @@ def explain_prediction():
     except Exception as exc:
         return jsonify({"error": f"Explainability failed: {str(exc)}"}), 500
 
+
 # ---------------------------------------------------------------------------
 # 3. Personalized Career Improvement Roadmap Endpoints
 # ---------------------------------------------------------------------------
+
 
 @api_bp.route("/roadmap", methods=["GET"])
 def get_roadmap():
@@ -131,14 +148,25 @@ def get_roadmap():
     session = get_db_session()
 
     if user:
-        tasks = session.query(RoadmapTask).filter_by(user_id=user.id).order_by(RoadmapTask.week_number).all()
+        tasks = (
+            session.query(RoadmapTask)
+            .filter_by(user_id=user.id)
+            .order_by(RoadmapTask.week_number)
+            .all()
+        )
         if tasks:
             return jsonify({"tasks": [t.to_dict() for t in tasks]}), 200
 
     # If no tasks saved in DB, generate default recommended template
-    default_profile = {"CGPA": 7.4, "Communication_Skills": 7, "Projects_Completed": 2, "Internship_Experience": 1}
+    default_profile = {
+        "CGPA": 7.4,
+        "Communication_Skills": 7,
+        "Projects_Completed": 2,
+        "Internship_Experience": 1,
+    }
     default_tasks = generate_personalized_roadmap(default_profile)
     return jsonify({"tasks": default_tasks}), 200
+
 
 @api_bp.route("/roadmap/generate", methods=["POST"])
 def generate_roadmap():
@@ -164,17 +192,25 @@ def generate_roadmap():
             )
             session.add(rt)
         session.commit()
-        persisted = session.query(RoadmapTask).filter_by(user_id=user.id).order_by(RoadmapTask.week_number).all()
+        persisted = (
+            session.query(RoadmapTask)
+            .filter_by(user_id=user.id)
+            .order_by(RoadmapTask.week_number)
+            .all()
+        )
         return jsonify({"tasks": [p.to_dict() for p in persisted]}), 200
 
     return jsonify({"tasks": tasks}), 200
+
 
 @api_bp.route("/roadmap/tasks/<int:task_id>", methods=["PATCH"])
 def update_task_status(task_id):
     data = request.get_json(force=True) or {}
     new_status = data.get("status")
     if new_status not in ("pending", "in_progress", "completed"):
-        return jsonify({"error": "Status must be pending, in_progress, or completed."}), 400
+        return jsonify(
+            {"error": "Status must be pending, in_progress, or completed."}
+        ), 400
 
     session = get_db_session()
     task = session.query(RoadmapTask).filter_by(id=task_id).first()
@@ -185,13 +221,16 @@ def update_task_status(task_id):
     session.commit()
     return jsonify({"message": "Task updated", "task": task.to_dict()}), 200
 
+
 # ---------------------------------------------------------------------------
 # 4. Job Role & Skill Gap Matching Endpoints
 # ---------------------------------------------------------------------------
 
+
 @api_bp.route("/roles", methods=["GET"])
 def get_roles():
     return jsonify({"roles": JOB_ROLES}), 200
+
 
 @api_bp.route("/roles/match", methods=["POST"])
 def match_job_roles():
@@ -209,9 +248,11 @@ def match_job_roles():
     results = match_all_roles(profile)
     return jsonify({"matches": results}), 200
 
+
 # ---------------------------------------------------------------------------
 # 5. AI Career Mentor Chatbot Endpoint
 # ---------------------------------------------------------------------------
+
 
 @api_bp.route("/mentor/chat", methods=["POST"])
 def mentor_chat():
@@ -220,17 +261,22 @@ def mentor_chat():
     student_ctx = data.get("student_context", {})
     history = data.get("history", [])
 
-    response = ask_mentor(message, student_context=student_ctx, conversation_history=history)
+    response = ask_mentor(
+        message, student_context=student_ctx, conversation_history=history
+    )
     return jsonify(response), 200
+
 
 # ---------------------------------------------------------------------------
 # 6. Smart Mock Assessment Endpoints
 # ---------------------------------------------------------------------------
 
+
 @api_bp.route("/assessments/tests", methods=["GET"])
 def get_tests():
     catalog = get_test_catalog()
     return jsonify({"tests": catalog}), 200
+
 
 @api_bp.route("/assessments/tests/<test_type>/start", methods=["GET"])
 def start_test(test_type):
@@ -239,6 +285,7 @@ def start_test(test_type):
         return jsonify({"test_type": test_type, "questions": questions}), 200
     except ValueError as e:
         return jsonify({"error": str(e)}), 404
+
 
 @api_bp.route("/assessments/tests/<test_type>/submit", methods=["POST"])
 def submit_test(test_type):
@@ -268,9 +315,11 @@ def submit_test(test_type):
     except ValueError as e:
         return jsonify({"error": str(e)}), 404
 
+
 # ---------------------------------------------------------------------------
 # 7. What-If Placement Simulator Endpoint
 # ---------------------------------------------------------------------------
+
 
 @api_bp.route("/simulator/simulate", methods=["POST"])
 def simulate():
@@ -279,7 +328,9 @@ def simulate():
     hypothetical = data.get("hypothetical")
 
     if not baseline or not hypothetical:
-        return jsonify({"error": "Both 'baseline' and 'hypothetical' input dictionaries required."}), 400
+        return jsonify(
+            {"error": "Both 'baseline' and 'hypothetical' input dictionaries required."}
+        ), 400
 
     model = get_model_from_app()
     if model is None:
@@ -291,9 +342,11 @@ def simulate():
     except Exception as exc:
         return jsonify({"error": f"Simulation failed: {str(exc)}"}), 500
 
+
 # ---------------------------------------------------------------------------
 # 8. Resume Analyzer & JD Matcher Endpoints
 # ---------------------------------------------------------------------------
+
 
 @api_bp.route("/resume/analyze", methods=["POST"])
 def analyze_resume():
@@ -318,10 +371,13 @@ def analyze_resume():
         raw_text = data.get("resume_text", "").strip()
 
     if not raw_text:
-        return jsonify({"error": "Provide a PDF file upload or 'resume_text' in JSON."}), 400
+        return jsonify(
+            {"error": "Provide a PDF file upload or 'resume_text' in JSON."}
+        ), 400
 
     analysis = analyze_resume_text(raw_text)
     return jsonify(analysis), 200
+
 
 @api_bp.route("/resume/match-jd", methods=["POST"])
 def match_jd():
@@ -330,20 +386,25 @@ def match_jd():
     jd_text = data.get("job_description", "")
 
     if not resume_text or not jd_text:
-        return jsonify({"error": "Both 'resume_text' and 'job_description' are required."}), 400
+        return jsonify(
+            {"error": "Both 'resume_text' and 'job_description' are required."}
+        ), 400
 
     result = match_resume_with_jd(resume_text, jd_text)
     return jsonify(result), 200
 
+
 # ---------------------------------------------------------------------------
 # 9. Mentor / TPO Early-Warning Dashboard Endpoints
 # ---------------------------------------------------------------------------
+
 
 @api_bp.route("/tpo/cohort", methods=["GET"])
 def get_cohort():
     dept = request.args.get("department")
     summary = get_tpo_cohort_summary(department=dept)
     return jsonify(summary), 200
+
 
 @api_bp.route("/tpo/interventions", methods=["GET", "POST"])
 def manage_interventions():
@@ -358,7 +419,9 @@ def manage_interventions():
         follow_up = data.get("follow_up_date", "")
 
         if not student_name or not reason or not action_plan:
-            return jsonify({"error": "student_name, reason, and action_plan are required."}), 400
+            return jsonify(
+                {"error": "student_name, reason, and action_plan are required."}
+            ), 400
 
         intervention = MentorIntervention(
             student_name=student_name,
@@ -370,10 +433,17 @@ def manage_interventions():
         )
         session.add(intervention)
         session.commit()
-        return jsonify({"message": "Intervention recorded", "intervention": intervention.to_dict()}), 201
+        return jsonify(
+            {"message": "Intervention recorded", "intervention": intervention.to_dict()}
+        ), 201
 
-    interventions = session.query(MentorIntervention).order_by(MentorIntervention.created_at.desc()).all()
+    interventions = (
+        session.query(MentorIntervention)
+        .order_by(MentorIntervention.created_at.desc())
+        .all()
+    )
     return jsonify({"interventions": [i.to_dict() for i in interventions]}), 200
+
 
 @api_bp.route("/tpo/export-csv", methods=["GET"])
 def export_tpo_csv():
@@ -391,9 +461,11 @@ def export_tpo_csv():
         download_name="tpo_cohort_interventions.csv",
     )
 
+
 # ---------------------------------------------------------------------------
 # 10. ML Quality & Calibration Monitoring
 # ---------------------------------------------------------------------------
+
 
 @api_bp.route("/model/monitoring", methods=["GET"])
 def model_monitoring():

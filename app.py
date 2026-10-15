@@ -21,7 +21,6 @@ from datetime import datetime, timezone
 from functools import wraps
 from threading import Lock
 
-import numpy as np
 import pandas as pd
 from flasgger import Swagger
 from flask import Flask, g, jsonify, request
@@ -39,6 +38,7 @@ from explainability import TreePathExplainer
 # ---------------------------------------------------------------------------
 # App factory
 # ---------------------------------------------------------------------------
+
 
 def create_app(config=None):
     """Application factory — creates and configures the Flask app."""
@@ -154,7 +154,9 @@ def create_app(config=None):
             if cfg.API_KEY:
                 provided = request.headers.get("X-API-Key", "")
                 if provided != cfg.API_KEY:
-                    return jsonify({"error": "Unauthorized — invalid or missing API key"}), 401
+                    return jsonify(
+                        {"error": "Unauthorized — invalid or missing API key"}
+                    ), 401
             return f(*args, **kwargs)
 
         return decorated
@@ -166,13 +168,25 @@ def create_app(config=None):
         """Validates and constrains a single prediction request."""
 
         IQ: float = Field(..., ge=50, le=200, description="Student IQ score (50–200)")
-        Prev_Sem_Result: float = Field(..., ge=0, le=10, description="Previous semester GPA (0–10)")
+        Prev_Sem_Result: float = Field(
+            ..., ge=0, le=10, description="Previous semester GPA (0–10)"
+        )
         CGPA: float = Field(..., ge=0, le=10, description="Cumulative GPA (0–10)")
-        Academic_Performance: int = Field(..., ge=1, le=10, description="Academic rating (1–10)")
-        Extra_Curricular_Score: int = Field(..., ge=1, le=10, description="Extracurricular rating (1–10)")
-        Communication_Skills: int = Field(..., ge=1, le=10, description="Communication rating (1–10)")
-        Projects_Completed: int = Field(..., ge=0, le=50, description="Number of projects (0–50)")
-        Internship_Experience: float = Field(..., ge=0, le=1, description="Internship (0=No, 1=Yes)")
+        Academic_Performance: int = Field(
+            ..., ge=1, le=10, description="Academic rating (1–10)"
+        )
+        Extra_Curricular_Score: int = Field(
+            ..., ge=1, le=10, description="Extracurricular rating (1–10)"
+        )
+        Communication_Skills: int = Field(
+            ..., ge=1, le=10, description="Communication rating (1–10)"
+        )
+        Projects_Completed: int = Field(
+            ..., ge=0, le=50, description="Number of projects (0–50)"
+        )
+        Internship_Experience: float = Field(
+            ..., ge=0, le=1, description="Internship (0=No, 1=Yes)"
+        )
 
         @field_validator("Internship_Experience")
         @classmethod
@@ -246,7 +260,9 @@ def create_app(config=None):
             if model is None:
                 with metrics_lock:
                     metrics["errors_total"] += 1
-                return jsonify({"error": "Model not loaded. Run model_building.py first."}), 500
+                return jsonify(
+                    {"error": "Model not loaded. Run model_building.py first."}
+                ), 500
 
         # Parse JSON
         try:
@@ -261,13 +277,17 @@ def create_app(config=None):
         items = [data] if is_single else data
 
         if not isinstance(items, list):
-            return jsonify({"error": "Payload must be a JSON object or array of objects"}), 400
+            return jsonify(
+                {"error": "Payload must be a JSON object or array of objects"}
+            ), 400
 
         # Validate each item through Pydantic
         validated = []
         for idx, item in enumerate(items):
             if not isinstance(item, dict):
-                return jsonify({"error": f"Item at index {idx} is not a JSON object"}), 400
+                return jsonify(
+                    {"error": f"Item at index {idx} is not a JSON object"}
+                ), 400
             try:
                 obj = PredictionInput(**item)
                 validated.append(obj.model_dump())
@@ -275,12 +295,19 @@ def create_app(config=None):
                 # Convert Pydantic errors to JSON-safe dicts
                 safe_errors = []
                 for err in e.errors():
-                    safe_err = {k: str(v) if not isinstance(v, (str, int, float, bool, list, type(None))) else v for k, v in err.items()}
+                    safe_err = {
+                        k: str(v)
+                        if not isinstance(v, (str, int, float, bool, list, type(None)))
+                        else v
+                        for k, v in err.items()
+                    }
                     safe_errors.append(safe_err)
-                return jsonify({
-                    "error": f"Validation failed for item {idx}",
-                    "details": safe_errors,
-                }), 400
+                return jsonify(
+                    {
+                        "error": f"Validation failed for item {idx}",
+                        "details": safe_errors,
+                    }
+                ), 400
 
         # Build DataFrame in training feature order
         input_df = pd.DataFrame(validated)[cfg.FEATURE_NAMES]
@@ -309,7 +336,10 @@ def create_app(config=None):
             results.append(res)
 
         # Optional explainability for single predictions
-        if is_single and (request.args.get("explain") == "true" or (isinstance(data, dict) and data.get("explain"))):
+        if is_single and (
+            request.args.get("explain") == "true"
+            or (isinstance(data, dict) and data.get("explain"))
+        ):
             try:
                 explainer = TreePathExplainer(model, cfg.FEATURE_NAMES)
                 results[0]["explainability"] = explainer.explain_instance(input_df)
@@ -327,10 +357,12 @@ def create_app(config=None):
             json.dumps(results),
         )
 
-        return jsonify({
-            "request_id": g.request_id,
-            "results": results[0] if is_single else results,
-        })
+        return jsonify(
+            {
+                "request_id": g.request_id,
+                "results": results[0] if is_single else results,
+            }
+        )
 
     @app.route("/explain", methods=["POST"])
     def root_explain():
@@ -351,7 +383,9 @@ def create_app(config=None):
           200:
             description: Service is alive
         """
-        return jsonify({"status": "healthy", "timestamp": datetime.now(timezone.utc).isoformat()})
+        return jsonify(
+            {"status": "healthy", "timestamp": datetime.now(timezone.utc).isoformat()}
+        )
 
     @app.route("/ready", methods=["GET"])
     def ready():
@@ -367,11 +401,13 @@ def create_app(config=None):
         """
         model_loaded = model_store["model"] is not None
         status_code = 200 if model_loaded else 503
-        return jsonify({
-            "ready": model_loaded,
-            "model_loaded": model_loaded,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-        }), status_code
+        return jsonify(
+            {
+                "ready": model_loaded,
+                "model_loaded": model_loaded,
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+            }
+        ), status_code
 
     @app.route("/metrics", methods=["GET"])
     @require_api_key
@@ -390,13 +426,15 @@ def create_app(config=None):
                 if metrics["requests_total"] > 0
                 else 0
             )
-            return jsonify({
-                "requests_total": metrics["requests_total"],
-                "predictions_total": metrics["predictions_total"],
-                "errors_total": metrics["errors_total"],
-                "avg_latency_ms": round(avg_latency, 2),
-                "uptime_since": metrics["started_at"],
-            })
+            return jsonify(
+                {
+                    "requests_total": metrics["requests_total"],
+                    "predictions_total": metrics["predictions_total"],
+                    "errors_total": metrics["errors_total"],
+                    "avg_latency_ms": round(avg_latency, 2),
+                    "uptime_since": metrics["started_at"],
+                }
+            )
 
     # -----------------------------------------------------------------------
     # Model information
@@ -424,7 +462,10 @@ def create_app(config=None):
         # Add live feature importance if model supports it
         if model is not None and hasattr(model, "feature_importances_"):
             importances = dict(
-                zip(cfg.FEATURE_NAMES, [round(float(x), 4) for x in model.feature_importances_])
+                zip(
+                    cfg.FEATURE_NAMES,
+                    [round(float(x), 4) for x in model.feature_importances_],
+                )
             )
             info["feature_importance"] = dict(
                 sorted(importances.items(), key=lambda x: x[1], reverse=True)
@@ -511,6 +552,7 @@ def create_app(config=None):
 # ---------------------------------------------------------------------------
 # Logging setup
 # ---------------------------------------------------------------------------
+
 
 def _setup_logging(app, cfg):
     """Configure structured JSON logging for production."""

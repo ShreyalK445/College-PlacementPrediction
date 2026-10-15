@@ -3,7 +3,6 @@ Integration tests for the Flask API endpoints.
 """
 
 import json
-import pytest
 
 
 class TestHealthEndpoints:
@@ -98,7 +97,9 @@ class TestPredictionEndpoint:
         )
         assert response.status_code == 400
 
-    def test_invalid_internship_value_returns_400(self, client, auth_headers, valid_payload):
+    def test_invalid_internship_value_returns_400(
+        self, client, auth_headers, valid_payload
+    ):
         payload = valid_payload.copy()
         payload["Internship_Experience"] = 0.5  # Must be 0 or 1
         response = client.post(

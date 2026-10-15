@@ -4,7 +4,6 @@ Curated question banks across Technical, Aptitude, Domain-Specific, and HR asses
 """
 
 from typing import Dict, List, Any
-import random
 
 QUESTION_BANKS: Dict[str, List[Dict[str, Any]]] = {
     "aptitude": [
@@ -36,7 +35,12 @@ QUESTION_BANKS: Dict[str, List[Dict[str, Any]]] = {
             "id": "apt_4",
             "category": "Logical Reasoning",
             "question": "Statements: All mangoes are golden-colored. No golden-colored things are cheap. Conclusions: 1) All mangoes are cheap. 2) Golden-colored mangoes are not cheap.",
-            "options": ["Only (1) follows", "Only (2) follows", "Either (1) or (2) follows", "Neither follows"],
+            "options": [
+                "Only (1) follows",
+                "Only (2) follows",
+                "Either (1) or (2) follows",
+                "Neither follows",
+            ],
             "correct_index": 1,
             "explanation": "Since all mangoes are golden and golden things are not cheap, golden mangoes cannot be cheap.",
         },
@@ -70,7 +74,12 @@ QUESTION_BANKS: Dict[str, List[Dict[str, Any]]] = {
             "id": "tech_3",
             "category": "Operating Systems",
             "question": "Which condition is NOT one of the four necessary Coffman conditions for a deadlock to occur?",
-            "options": ["Mutual Exclusion", "Hold and Wait", "Preemption Allowed", "Circular Wait"],
+            "options": [
+                "Mutual Exclusion",
+                "Hold and Wait",
+                "Preemption Allowed",
+                "Circular Wait",
+            ],
             "correct_index": 2,
             "explanation": "Deadlock requires No Preemption (resources cannot be forcibly taken). If preemption is allowed, deadlock is avoided.",
         },
@@ -86,7 +95,12 @@ QUESTION_BANKS: Dict[str, List[Dict[str, Any]]] = {
             "id": "tech_5",
             "category": "Computer Networks",
             "question": "At which layer of the OSI model does the TCP protocol operate?",
-            "options": ["Network Layer", "Transport Layer", "Data Link Layer", "Session Layer"],
+            "options": [
+                "Network Layer",
+                "Transport Layer",
+                "Data Link Layer",
+                "Session Layer",
+            ],
             "correct_index": 1,
             "explanation": "TCP and UDP are Transport Layer (Layer 4) protocols providing host-to-host communication services.",
         },
@@ -122,7 +136,12 @@ QUESTION_BANKS: Dict[str, List[Dict[str, Any]]] = {
             "id": "da_3",
             "category": "Python Pandas",
             "question": "Which Pandas method is best suited to reshape a DataFrame from long format to wide format?",
-            "options": ["df.melt()", "df.pivot() or df.pivot_table()", "df.concat()", "df.dropna()"],
+            "options": [
+                "df.melt()",
+                "df.pivot() or df.pivot_table()",
+                "df.concat()",
+                "df.dropna()",
+            ],
             "correct_index": 1,
             "explanation": "pivot() and pivot_table() reshape data from long to wide, while melt() does the reverse.",
         },
@@ -130,7 +149,12 @@ QUESTION_BANKS: Dict[str, List[Dict[str, Any]]] = {
             "id": "da_4",
             "category": "Business Intelligence",
             "question": "In dimensional data modeling, what type of table contains foreign keys referencing dimensions and numerical measures?",
-            "options": ["Dimension Table", "Fact Table", "Bridge Table", "Lookup Table"],
+            "options": [
+                "Dimension Table",
+                "Fact Table",
+                "Bridge Table",
+                "Lookup Table",
+            ],
             "correct_index": 1,
             "explanation": "Fact tables hold the quantitative metrics (measures) and foreign keys connecting to dimension tables.",
         },
@@ -161,7 +185,12 @@ QUESTION_BANKS: Dict[str, List[Dict[str, Any]]] = {
             "id": "sd_3",
             "category": "System Design",
             "question": "In distributed caching, which cache invalidation pattern updates the cache and the primary database simultaneously?",
-            "options": ["Cache-Aside", "Write-Through", "Write-Behind (Write-Back)", "Refresh-Ahead"],
+            "options": [
+                "Cache-Aside",
+                "Write-Through",
+                "Write-Behind (Write-Back)",
+                "Refresh-Ahead",
+            ],
             "correct_index": 1,
             "explanation": "Write-Through caches write data to both the cache and the database synchronously before returning success.",
         },
@@ -195,6 +224,7 @@ QUESTION_BANKS: Dict[str, List[Dict[str, Any]]] = {
         },
     ],
 }
+
 
 def get_test_catalog() -> List[Dict[str, Any]]:
     """Returns available mock assessment suites and metadata."""
@@ -241,6 +271,7 @@ def get_test_catalog() -> List[Dict[str, Any]]:
         },
     ]
 
+
 def get_test_questions(test_type: str) -> List[Dict[str, Any]]:
     """Returns questions for a test without correct answer indices (for client taking test)."""
     if test_type not in QUESTION_BANKS:
@@ -249,13 +280,16 @@ def get_test_questions(test_type: str) -> List[Dict[str, Any]]:
     questions = QUESTION_BANKS[test_type]
     sanitized = []
     for q in questions:
-        sanitized.append({
-            "id": q["id"],
-            "category": q["category"],
-            "question": q["question"],
-            "options": q["options"],
-        })
+        sanitized.append(
+            {
+                "id": q["id"],
+                "category": q["category"],
+                "question": q["question"],
+                "options": q["options"],
+            }
+        )
     return sanitized
+
 
 def grade_test(test_type: str, user_answers: Dict[str, int]) -> Dict[str, Any]:
     """
@@ -278,21 +312,23 @@ def grade_test(test_type: str, user_answers: Dict[str, int]) -> Dict[str, Any]:
         category_totals[cat] = category_totals.get(cat, 0) + 1
 
         selected_idx = user_answers.get(qid)
-        is_correct = (selected_idx == q["correct_index"])
+        is_correct = selected_idx == q["correct_index"]
 
         if is_correct:
             correct_count += 1
             category_correct[cat] = category_correct.get(cat, 0) + 1
 
-        itemized_review.append({
-            "id": qid,
-            "question": q["question"],
-            "category": cat,
-            "selected_index": selected_idx,
-            "correct_index": q["correct_index"],
-            "is_correct": is_correct,
-            "explanation": q["explanation"],
-        })
+        itemized_review.append(
+            {
+                "id": qid,
+                "question": q["question"],
+                "category": cat,
+                "selected_index": selected_idx,
+                "correct_index": q["correct_index"],
+                "is_correct": is_correct,
+                "explanation": q["explanation"],
+            }
+        )
 
     score_pct = round((correct_count / max(total, 1)) * 100, 1)
 
@@ -309,10 +345,14 @@ def grade_test(test_type: str, user_answers: Dict[str, int]) -> Dict[str, Any]:
     # Feedback rubric
     if score_pct >= 80:
         overall_verdict = "Excellent — Strong Mastery Demonstrated"
-        recommendations = ["Continue maintaining timed practice to preserve speed and accuracy."]
+        recommendations = [
+            "Continue maintaining timed practice to preserve speed and accuracy."
+        ]
     elif score_pct >= 60:
         overall_verdict = "Competent — Minor Remediation Required"
-        recommendations = [f"Focus extra revision on weaker categories: {', '.join(weak_categories) if weak_categories else 'edge cases'}."]
+        recommendations = [
+            f"Focus extra revision on weaker categories: {', '.join(weak_categories) if weak_categories else 'edge cases'}."
+        ]
     else:
         overall_verdict = "Needs Targeted Improvement"
         recommendations = [

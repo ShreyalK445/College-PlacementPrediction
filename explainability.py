@@ -30,6 +30,7 @@ FEATURE_LABELS = {
     "Internship_Experience": "Internship Experience",
 }
 
+
 class TreePathExplainer:
     """
     Exact decision-path tree interpreter for scikit-learn Random Forests.
@@ -46,7 +47,9 @@ class TreePathExplainer:
         Computes local feature contributions for a single student sample.
         """
         if not hasattr(self.model, "estimators_"):
-            raise ValueError("Model must be a fitted ensemble with estimators_ attribute")
+            raise ValueError(
+                "Model must be a fitted ensemble with estimators_ attribute"
+            )
 
         X = sample_df[self.feature_names].values
         if len(X.shape) == 1:
@@ -71,7 +74,7 @@ class TreePathExplainer:
                 feat = t.feature[curr_node]
                 p_curr = t.value[curr_node, 0, 1] / np.sum(t.value[curr_node, 0])
                 p_next = t.value[next_node, 0, 1] / np.sum(t.value[next_node, 0])
-                all_contribs[feat] += (p_next - p_curr)
+                all_contribs[feat] += p_next - p_curr
 
         n_trees = len(self.model.estimators_)
         base_val /= n_trees
@@ -105,7 +108,9 @@ class TreePathExplainer:
         negatives.sort(key=lambda x: x["contribution"])  # most negative first
 
         # Generate narrative text
-        narrative = self._generate_narrative(positives, negatives, predicted_class, predicted_proba)
+        narrative = self._generate_narrative(
+            positives, negatives, predicted_class, predicted_proba
+        )
 
         return {
             "method": "Exact Tree-Path Attribution (TreeInterpreter)",
@@ -127,20 +132,32 @@ class TreePathExplainer:
         prob_pct = round(proba * 100, 1)
 
         if pred_class == 1:
-            lines.append(f"Candidate is classified as Placed with a model confidence of {prob_pct}%.")
+            lines.append(
+                f"Candidate is classified as Placed with a model confidence of {prob_pct}%."
+            )
             if positives:
                 top_p = positives[0]
-                lines.append(f"The strongest factor boosting this outcome was {top_p['label']} (value: {top_p['student_value']}), contributing +{top_p['percentage_impact']}% toward placement.")
+                lines.append(
+                    f"The strongest factor boosting this outcome was {top_p['label']} (value: {top_p['student_value']}), contributing +{top_p['percentage_impact']}% toward placement."
+                )
             if negatives:
                 top_n = negatives[0]
-                lines.append(f"Conversely, {top_n['label']} was the primary drag, lowering probability by {abs(top_n['percentage_impact'])}%.")
+                lines.append(
+                    f"Conversely, {top_n['label']} was the primary drag, lowering probability by {abs(top_n['percentage_impact'])}%."
+                )
         else:
-            lines.append(f"Candidate is currently classified as At-Risk (predicted probability: {prob_pct}%).")
+            lines.append(
+                f"Candidate is currently classified as At-Risk (predicted probability: {prob_pct}%)."
+            )
             if negatives:
                 top_n = negatives[0]
-                lines.append(f"The most substantial limiting factor was {top_n['label']} (value: {top_n['student_value']}), which reduced placement probability by {abs(top_n['percentage_impact'])}%.")
+                lines.append(
+                    f"The most substantial limiting factor was {top_n['label']} (value: {top_n['student_value']}), which reduced placement probability by {abs(top_n['percentage_impact'])}%."
+                )
             if positives:
                 top_p = positives[0]
-                lines.append(f"A notable positive strength was {top_p['label']} (value: {top_p['student_value']}), contributing +{top_p['percentage_impact']}%.")
+                lines.append(
+                    f"A notable positive strength was {top_p['label']} (value: {top_p['student_value']}), contributing +{top_p['percentage_impact']}%."
+                )
 
         return lines

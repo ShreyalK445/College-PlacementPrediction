@@ -15,6 +15,7 @@ load_dotenv()
 # Base configuration
 # ---------------------------------------------------------------------------
 
+
 class BaseConfig:
     """Shared configuration across all environments."""
 

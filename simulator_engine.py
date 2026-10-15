@@ -3,11 +3,14 @@ What-If Placement Simulator Engine
 Simulates hypothetical improvements in student credentials and computes probability deltas.
 """
 
-from typing import Dict, Any, List
+from typing import Dict, Any
 import pandas as pd
 from explainability import TreePathExplainer, FEATURE_NAMES, FEATURE_LABELS
 
-def run_simulation(model, baseline_inputs: Dict[str, Any], hypothetical_inputs: Dict[str, Any]) -> Dict[str, Any]:
+
+def run_simulation(
+    model, baseline_inputs: Dict[str, Any], hypothetical_inputs: Dict[str, Any]
+) -> Dict[str, Any]:
     """
     Compares baseline vs hypothetical scenarios.
     Returns delta in probability, status transitions, and driver feature shifts.
@@ -35,20 +38,26 @@ def run_simulation(model, baseline_inputs: Dict[str, Any], hypothetical_inputs: 
         b_val = float(baseline_inputs[feat])
         h_val = float(hypothetical_inputs[feat])
         if abs(h_val - b_val) > 1e-4:
-            modified_features.append({
-                "feature": feat,
-                "label": FEATURE_LABELS.get(feat, feat),
-                "original_value": b_val,
-                "hypothetical_value": h_val,
-                "delta_value": round(h_val - b_val, 2),
-                "base_contribution": base_explanation["feature_contributions"].get(feat, 0),
-                "hypo_contribution": hypo_explanation["feature_contributions"].get(feat, 0),
-                "delta_contribution": round(
-                    hypo_explanation["feature_contributions"].get(feat, 0)
-                    - base_explanation["feature_contributions"].get(feat, 0),
-                    4
-                ),
-            })
+            modified_features.append(
+                {
+                    "feature": feat,
+                    "label": FEATURE_LABELS.get(feat, feat),
+                    "original_value": b_val,
+                    "hypothetical_value": h_val,
+                    "delta_value": round(h_val - b_val, 2),
+                    "base_contribution": base_explanation["feature_contributions"].get(
+                        feat, 0
+                    ),
+                    "hypo_contribution": hypo_explanation["feature_contributions"].get(
+                        feat, 0
+                    ),
+                    "delta_contribution": round(
+                        hypo_explanation["feature_contributions"].get(feat, 0)
+                        - base_explanation["feature_contributions"].get(feat, 0),
+                        4,
+                    ),
+                }
+            )
 
     # Summary insight
     status_transition = "No Change"
@@ -59,16 +68,24 @@ def run_simulation(model, baseline_inputs: Dict[str, Any], hypothetical_inputs: 
 
     insights = []
     if delta_percentage > 0:
-        insights.append(f"This scenario yields a +{delta_percentage}% boost in estimated placement probability.")
+        insights.append(
+            f"This scenario yields a +{delta_percentage}% boost in estimated placement probability."
+        )
         # Find which modified feature produced the biggest positive delta contribution
         if modified_features:
             best_feat = max(modified_features, key=lambda x: x["delta_contribution"])
             if best_feat["delta_contribution"] > 0:
-                insights.append(f"The largest single gain came from improving {best_feat['label']} (+{round(best_feat['delta_contribution']*100, 1)}% impact).")
+                insights.append(
+                    f"The largest single gain came from improving {best_feat['label']} (+{round(best_feat['delta_contribution'] * 100, 1)}% impact)."
+                )
     elif delta_percentage < 0:
-        insights.append(f"This scenario reduces estimated placement probability by {abs(delta_percentage)}%.")
+        insights.append(
+            f"This scenario reduces estimated placement probability by {abs(delta_percentage)}%."
+        )
     else:
-        insights.append("Adjustments made in this scenario resulted in no net change in model confidence.")
+        insights.append(
+            "Adjustments made in this scenario resulted in no net change in model confidence."
+        )
 
     return {
         "baseline": {

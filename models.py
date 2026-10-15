@@ -10,7 +10,6 @@ from sqlalchemy import (
     Integer,
     String,
     Float,
-    Boolean,
     Text,
     DateTime,
     ForeignKey,
@@ -22,6 +21,7 @@ import os
 
 Base = declarative_base()
 
+
 class User(Base):
     __tablename__ = "users"
 
@@ -29,13 +29,21 @@ class User(Base):
     email = Column(String(120), unique=True, nullable=False, index=True)
     password_hash = Column(String(255), nullable=False)
     full_name = Column(String(120), nullable=False)
-    role = Column(String(30), default="student", nullable=False)  # student, mentor, tpo, admin
+    role = Column(
+        String(30), default="student", nullable=False
+    )  # student, mentor, tpo, admin
     department = Column(String(80), default="Computer Science")
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
-    assessments = relationship("AssessmentRecord", back_populates="user", cascade="all, delete-orphan")
-    roadmap_tasks = relationship("RoadmapTask", back_populates="user", cascade="all, delete-orphan")
-    mock_attempts = relationship("MockAssessmentAttempt", back_populates="user", cascade="all, delete-orphan")
+    assessments = relationship(
+        "AssessmentRecord", back_populates="user", cascade="all, delete-orphan"
+    )
+    roadmap_tasks = relationship(
+        "RoadmapTask", back_populates="user", cascade="all, delete-orphan"
+    )
+    mock_attempts = relationship(
+        "MockAssessmentAttempt", back_populates="user", cascade="all, delete-orphan"
+    )
 
     def set_password(self, password: str):
         self.password_hash = generate_password_hash(password)
@@ -64,7 +72,9 @@ class AssessmentRecord(Base):
     probability = Column(Float, nullable=False)
     status = Column(String(50), nullable=False)
     explainability_json = Column(Text, nullable=True)
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), index=True)
+    created_at = Column(
+        DateTime, default=lambda: datetime.now(timezone.utc), index=True
+    )
 
     user = relationship("User", back_populates="assessments")
 
@@ -72,7 +82,9 @@ class AssessmentRecord(Base):
         return json.loads(self.inputs_json) if self.inputs_json else {}
 
     def get_explainability(self):
-        return json.loads(self.explainability_json) if self.explainability_json else None
+        return (
+            json.loads(self.explainability_json) if self.explainability_json else None
+        )
 
     def to_dict(self):
         return {
@@ -95,7 +107,9 @@ class RoadmapTask(Base):
     week_number = Column(Integer, nullable=False)
     title = Column(String(200), nullable=False)
     description = Column(Text, nullable=False)
-    category = Column(String(60), nullable=False)  # Academics, Coding, Communication, Projects, Mock Interviews
+    category = Column(
+        String(60), nullable=False
+    )  # Academics, Coding, Communication, Projects, Mock Interviews
     priority = Column(String(20), default="Medium")  # High, Medium, Low
     status = Column(String(30), default="pending")  # pending, in_progress, completed
     deadline = Column(String(50), nullable=True)
@@ -128,13 +142,17 @@ class MockAssessmentAttempt(Base):
 
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)
-    test_type = Column(String(60), nullable=False)  # technical, aptitude, hr, software_developer, etc.
+    test_type = Column(
+        String(60), nullable=False
+    )  # technical, aptitude, hr, software_developer, etc.
     score = Column(Float, nullable=False)
     total_questions = Column(Integer, nullable=False)
     time_spent_secs = Column(Integer, default=0)
     category_scores_json = Column(Text, nullable=True)
     feedback = Column(Text, nullable=True)
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), index=True)
+    created_at = Column(
+        DateTime, default=lambda: datetime.now(timezone.utc), index=True
+    )
 
     user = relationship("User", back_populates="mock_attempts")
 
@@ -146,7 +164,9 @@ class MockAssessmentAttempt(Base):
             "score": self.score,
             "total_questions": self.total_questions,
             "time_spent_secs": self.time_spent_secs,
-            "category_scores": json.loads(self.category_scores_json) if self.category_scores_json else {},
+            "category_scores": json.loads(self.category_scores_json)
+            if self.category_scores_json
+            else {},
             "feedback": self.feedback,
             "created_at": self.created_at.isoformat() if self.created_at else None,
         }
@@ -165,7 +185,9 @@ class MentorIntervention(Base):
     follow_up_date = Column(String(50), nullable=True)
     status = Column(String(30), default="Open")  # Open, In Progress, Resolved
     created_by_name = Column(String(120), default="Placement Officer")
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), index=True)
+    created_at = Column(
+        DateTime, default=lambda: datetime.now(timezone.utc), index=True
+    )
 
     def to_dict(self):
         return {
@@ -190,6 +212,7 @@ class MentorIntervention(Base):
 _engine = None
 _session_factory = None
 
+
 def init_db(database_uri=None):
     global _engine, _session_factory
     if database_uri is None:
@@ -203,8 +226,11 @@ def init_db(database_uri=None):
         echo=False,
     )
     Base.metadata.create_all(_engine)
-    _session_factory = scoped_session(sessionmaker(autocommit=False, autoflush=False, bind=_engine))
+    _session_factory = scoped_session(
+        sessionmaker(autocommit=False, autoflush=False, bind=_engine)
+    )
     return _engine
+
 
 def get_db_session():
     global _session_factory

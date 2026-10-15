@@ -29,7 +29,8 @@ st.set_page_config(
 # ---------------------------------------------------------------------------
 # Custom CSS
 # ---------------------------------------------------------------------------
-st.markdown("""
+st.markdown(
+    """
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
@@ -104,7 +105,9 @@ st.markdown("""
         backdrop-filter: blur(10px);
     }
 </style>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)
 
 # ---------------------------------------------------------------------------
 # Model loading
@@ -199,18 +202,32 @@ if page == "🔮 Single Prediction":
     with col1:
         st.markdown('<div class="metric-card">', unsafe_allow_html=True)
         iq = st.slider("🧠 IQ Score", min_value=50, max_value=150, value=100, step=1)
-        prev_sem = st.slider("📝 Previous Semester GPA", min_value=0.0, max_value=10.0, value=7.5, step=0.01)
+        prev_sem = st.slider(
+            "📝 Previous Semester GPA",
+            min_value=0.0,
+            max_value=10.0,
+            value=7.5,
+            step=0.01,
+        )
         cgpa = st.slider("📊 CGPA", min_value=0.0, max_value=10.0, value=7.5, step=0.01)
-        academic_perf = st.slider("🏫 Academic Performance", min_value=1, max_value=10, value=6, step=1)
-        st.markdown('</div>', unsafe_allow_html=True)
+        academic_perf = st.slider(
+            "🏫 Academic Performance", min_value=1, max_value=10, value=6, step=1
+        )
+        st.markdown("</div>", unsafe_allow_html=True)
 
     with col2:
         st.markdown('<div class="metric-card">', unsafe_allow_html=True)
-        extra_curricular = st.slider("🏆 Extra-Curricular Score", min_value=1, max_value=10, value=5, step=1)
-        comm_skills = st.slider("🗣️ Communication Skills", min_value=1, max_value=10, value=6, step=1)
-        projects = st.slider("💻 Projects Completed", min_value=0, max_value=10, value=2, step=1)
+        extra_curricular = st.slider(
+            "🏆 Extra-Curricular Score", min_value=1, max_value=10, value=5, step=1
+        )
+        comm_skills = st.slider(
+            "🗣️ Communication Skills", min_value=1, max_value=10, value=6, step=1
+        )
+        projects = st.slider(
+            "💻 Projects Completed", min_value=0, max_value=10, value=2, step=1
+        )
         internship = st.selectbox("💼 Internship Experience", options=["No", "Yes"])
-        st.markdown('</div>', unsafe_allow_html=True)
+        st.markdown("</div>", unsafe_allow_html=True)
 
     internship_val = 1.0 if internship == "Yes" else 0.0
 
@@ -220,24 +237,34 @@ if page == "🔮 Single Prediction":
         predict_clicked = st.button("🚀 Predict Placement", use_container_width=True)
 
     if predict_clicked:
-        features = pd.DataFrame([{
-            "IQ": iq,
-            "Prev_Sem_Result": prev_sem,
-            "CGPA": cgpa,
-            "Academic_Performance": academic_perf,
-            "Extra_Curricular_Score": extra_curricular,
-            "Communication_Skills": comm_skills,
-            "Projects_Completed": projects,
-            "Internship_Experience": internship_val,
-        }])
+        features = pd.DataFrame(
+            [
+                {
+                    "IQ": iq,
+                    "Prev_Sem_Result": prev_sem,
+                    "CGPA": cgpa,
+                    "Academic_Performance": academic_perf,
+                    "Extra_Curricular_Score": extra_curricular,
+                    "Communication_Skills": comm_skills,
+                    "Projects_Completed": projects,
+                    "Internship_Experience": internship_val,
+                }
+            ]
+        )
 
         prediction = model.predict(features)[0]
-        probability = model.predict_proba(features)[0][1] if hasattr(model, "predict_proba") else None
+        probability = (
+            model.predict_proba(features)[0][1]
+            if hasattr(model, "predict_proba")
+            else None
+        )
 
         # Save to history
         record = features.iloc[0].to_dict()
         record["Prediction"] = "Placed" if prediction == 1 else "Not Placed"
-        record["Probability"] = f"{probability:.2%}" if probability is not None else "N/A"
+        record["Probability"] = (
+            f"{probability:.2%}" if probability is not None else "N/A"
+        )
         st.session_state.prediction_history.append(record)
 
         st.markdown("")
@@ -268,8 +295,10 @@ if page == "🔮 Single Prediction":
 # ===== BATCH PREDICTION =====
 elif page == "📦 Batch Prediction":
     st.markdown("#### Upload a CSV file for batch predictions")
-    st.markdown("CSV must contain columns: `IQ`, `Prev_Sem_Result`, `CGPA`, `Academic_Performance`, "
-                "`Extra_Curricular_Score`, `Communication_Skills`, `Projects_Completed`, `Internship_Experience`")
+    st.markdown(
+        "CSV must contain columns: `IQ`, `Prev_Sem_Result`, `CGPA`, `Academic_Performance`, "
+        "`Extra_Curricular_Score`, `Communication_Skills`, `Projects_Completed`, `Internship_Experience`"
+    )
 
     uploaded_file = st.file_uploader("Choose a CSV file", type=["csv"])
 
@@ -277,9 +306,14 @@ elif page == "📦 Batch Prediction":
         try:
             batch_df = pd.read_csv(uploaded_file)
             required_cols = [
-                "IQ", "Prev_Sem_Result", "CGPA", "Academic_Performance",
-                "Extra_Curricular_Score", "Communication_Skills",
-                "Projects_Completed", "Internship_Experience",
+                "IQ",
+                "Prev_Sem_Result",
+                "CGPA",
+                "Academic_Performance",
+                "Extra_Curricular_Score",
+                "Communication_Skills",
+                "Projects_Completed",
+                "Internship_Experience",
             ]
             missing = [c for c in required_cols if c not in batch_df.columns]
             if missing:
@@ -298,8 +332,12 @@ elif page == "📦 Batch Prediction":
                     )
 
                     results_df = batch_df.copy()
-                    results_df["Prediction"] = ["Placed" if p == 1 else "Not Placed" for p in predictions]
-                    results_df["Probability"] = [f"{p:.2%}" if p is not None else "N/A" for p in probabilities]
+                    results_df["Prediction"] = [
+                        "Placed" if p == 1 else "Not Placed" for p in predictions
+                    ]
+                    results_df["Probability"] = [
+                        f"{p:.2%}" if p is not None else "N/A" for p in probabilities
+                    ]
 
                     st.markdown("### 📊 Results")
                     st.dataframe(results_df, use_container_width=True)
@@ -332,7 +370,11 @@ elif page == "📜 Prediction History":
         history_df = pd.DataFrame(st.session_state.prediction_history)
         st.dataframe(history_df, use_container_width=True)
 
-        placed = sum(1 for r in st.session_state.prediction_history if r["Prediction"] == "Placed")
+        placed = sum(
+            1
+            for r in st.session_state.prediction_history
+            if r["Prediction"] == "Placed"
+        )
         total = len(st.session_state.prediction_history)
 
         col_h1, col_h2, col_h3 = st.columns(3)

@@ -4,9 +4,9 @@ Auth, Explainability, Roadmap, Role Matching, Mentor Chat,
 Mock Assessments, Simulator, Resume Analyzer, TPO Early-Warning, and Model Monitoring.
 """
 
-import json
 import pytest
 from app import create_app
+
 
 @pytest.fixture
 def client():
@@ -14,6 +14,7 @@ def client():
     app.config["TESTING"] = True
     with app.test_client() as client:
         yield client
+
 
 SAMPLE_STUDENT = {
     "IQ": 120,
@@ -29,6 +30,7 @@ SAMPLE_STUDENT = {
 # ---------------------------------------------------------------------------
 # 1. Explainability Tests
 # ---------------------------------------------------------------------------
+
 
 def test_explain_endpoint_success(client):
     res = client.post("/api/explain", json=SAMPLE_STUDENT)
@@ -48,6 +50,7 @@ def test_explain_endpoint_success(client):
     pred_prob = data["predicted_probability"]
     assert abs((base_val + sum_contribs) - pred_prob) < 0.01
 
+
 def test_predict_with_explain_flag(client, auth_headers):
     payload = {**SAMPLE_STUDENT, "explain": True}
     res = client.post("/predict", json=payload, headers=auth_headers)
@@ -57,9 +60,11 @@ def test_predict_with_explain_flag(client, auth_headers):
     assert "explainability" in data["results"]
     assert data["results"]["explainability"]["method"].startswith("Exact Tree-Path")
 
+
 # ---------------------------------------------------------------------------
 # 2. Career Improvement Roadmap Tests
 # ---------------------------------------------------------------------------
+
 
 def test_roadmap_generate_and_fetch(client):
     # Generate roadmap from profile
@@ -82,9 +87,11 @@ def test_roadmap_generate_and_fetch(client):
     assert res_get.status_code == 200
     assert "tasks" in res_get.get_json()
 
+
 # ---------------------------------------------------------------------------
 # 3. Job Role Matching Tests
 # ---------------------------------------------------------------------------
+
 
 def test_job_roles_list(client):
     res = client.get("/api/roles")
@@ -95,6 +102,7 @@ def test_job_roles_list(client):
     assert "aiml_engineer" in roles
     assert "bi_analyst" in roles
     assert "qa_engineer" in roles
+
 
 def test_job_roles_match_all(client):
     payload = {
@@ -113,24 +121,30 @@ def test_job_roles_match_all(client):
         assert "missing_core_skills" in m
         assert "actionable_study_plan" in m
 
+
 def test_job_roles_match_single(client):
     payload = {
         "role_key": "data_analyst",
         "profile": {
             **SAMPLE_STUDENT,
             "skills": ["SQL", "Power BI", "Pandas", "Excel"],
-        }
+        },
     }
     res = client.post("/api/roles/match", json=payload)
     assert res.status_code == 200
     data = res.get_json()
     assert data["role_key"] == "data_analyst"
     assert data["readiness_score"] > 0
-    assert "SQL & Relational Databases" in data["matched_core_skills"] or len(data["matched_core_skills"]) >= 0
+    assert (
+        "SQL & Relational Databases" in data["matched_core_skills"]
+        or len(data["matched_core_skills"]) >= 0
+    )
+
 
 # ---------------------------------------------------------------------------
 # 4. AI Career Mentor Chat Tests
 # ---------------------------------------------------------------------------
+
 
 def test_mentor_chat_fallback(client):
     payload = {
@@ -143,6 +157,7 @@ def test_mentor_chat_fallback(client):
     assert "reply" in data
     assert "Google XYZ Formula" in data["reply"] or "Bullet" in data["reply"]
 
+
 def test_mentor_chat_technical_question(client):
     payload = {"message": "Give me a technical question on data structures"}
     res = client.post("/api/mentor/chat", json=payload)
@@ -150,15 +165,18 @@ def test_mentor_chat_technical_question(client):
     data = res.get_json()
     assert "Data Structures" in data["reply"] or "Binary Tree" in data["reply"]
 
+
 # ---------------------------------------------------------------------------
 # 5. Mock Interview Assessment Tests
 # ---------------------------------------------------------------------------
+
 
 def test_mock_test_catalog(client):
     res = client.get("/api/assessments/tests")
     assert res.status_code == 200
     tests = res.get_json()["tests"]
     assert len(tests) >= 5
+
 
 def test_mock_test_start_and_submit(client):
     res_start = client.get("/api/assessments/tests/aptitude/start")
@@ -171,7 +189,10 @@ def test_mock_test_start_and_submit(client):
 
     # Submit answers
     answers = {q["id"]: 1 for q in questions}
-    res_submit = client.post("/api/assessments/tests/aptitude/submit", json={"answers": answers, "time_spent_secs": 180})
+    res_submit = client.post(
+        "/api/assessments/tests/aptitude/submit",
+        json={"answers": answers, "time_spent_secs": 180},
+    )
     assert res_submit.status_code == 200
     scorecard = res_submit.get_json()
     assert "score" in scorecard
@@ -180,9 +201,11 @@ def test_mock_test_start_and_submit(client):
     assert "category_breakdown" in scorecard
     assert "review" in scorecard
 
+
 # ---------------------------------------------------------------------------
 # 6. What-If Placement Simulator Tests
 # ---------------------------------------------------------------------------
+
 
 def test_what_if_simulator(client):
     baseline = dict(SAMPLE_STUDENT)
@@ -201,9 +224,11 @@ def test_what_if_simulator(client):
     assert len(sim["modified_features"]) == 2
     assert "insights" in sim
 
+
 # ---------------------------------------------------------------------------
 # 7. Resume Analyzer Tests
 # ---------------------------------------------------------------------------
+
 
 def test_resume_text_analysis(client):
     sample_resume = (
@@ -222,6 +247,7 @@ def test_resume_text_analysis(client):
     assert data["structural_checks"]["has_internship_section"] is True
     assert data["resume_strength_score"] > 50
 
+
 def test_resume_match_with_jd(client):
     resume = "Skills: Python, SQL, Git, Linux, Docker"
     jd = "Requirements: Python, SQL, Docker, Kubernetes, AWS, Microservices"
@@ -234,9 +260,11 @@ def test_resume_match_with_jd(client):
     assert "Kubernetes" in data["missing_skills"]
     assert data["match_percentage"] > 0
 
+
 # ---------------------------------------------------------------------------
 # 8. TPO Early-Warning Dashboard Tests
 # ---------------------------------------------------------------------------
+
 
 def test_tpo_cohort_summary(client):
     res = client.get("/api/tpo/cohort")
@@ -246,6 +274,7 @@ def test_tpo_cohort_summary(client):
     assert "roster" in data
     assert len(data["roster"]) > 0
     assert "intervention_priority" in data["roster"][0]
+
 
 def test_tpo_interventions_crud(client):
     new_intervention = {
@@ -265,18 +294,22 @@ def test_tpo_interventions_crud(client):
     assert len(interventions) >= 1
     assert any(i["student_name"] == "Test Student" for i in interventions)
 
+
 def test_tpo_csv_export(client):
     res = client.get("/api/tpo/export-csv")
     assert res.status_code == 200
     assert res.headers["Content-Type"].startswith("text/csv")
     assert b"Student_ID,Name,Email" in res.data
 
+
 # ---------------------------------------------------------------------------
 # 9. Authentication Tests
 # ---------------------------------------------------------------------------
 
+
 def test_auth_register_and_login(client):
     import uuid
+
     email = f"user_{uuid.uuid4().hex[:8]}@test.edu"
     register_payload = {
         "email": email,
@@ -290,7 +323,9 @@ def test_auth_register_and_login(client):
     assert "token" in res_reg.get_json()
 
     # Login
-    res_login = client.post("/api/auth/login", json={"email": email, "password": "SecurePassword123!"})
+    res_login = client.post(
+        "/api/auth/login", json={"email": email, "password": "SecurePassword123!"}
+    )
     assert res_login.status_code == 200
     token = res_login.get_json()["token"]
 
@@ -299,9 +334,11 @@ def test_auth_register_and_login(client):
     assert res_me.status_code == 200
     assert res_me.get_json()["user"]["email"] == email
 
+
 # ---------------------------------------------------------------------------
 # 10. Model Monitoring & Calibration Tests
 # ---------------------------------------------------------------------------
+
 
 def test_model_monitoring_endpoint(client):
     res = client.get("/api/model/monitoring")

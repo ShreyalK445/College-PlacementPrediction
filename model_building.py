@@ -16,9 +16,8 @@ import pickle
 import sys
 from datetime import datetime, timezone
 
-import numpy as np
 import pandas as pd
-from sklearn.ensemble import GradientBoostingClassifier, RandomForestClassifier
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import (
     accuracy_score,
     classification_report,
@@ -239,7 +238,9 @@ with open(fi_path, "w") as f:
 # CV results summary
 cv_path = os.path.join(ARTIFACTS_DIR, "cv_results_summary.json")
 cv_results = pd.DataFrame(grid_search.cv_results_)
-cv_summary = cv_results[["params", "mean_test_score", "std_test_score", "rank_test_score"]]
+cv_summary = cv_results[
+    ["params", "mean_test_score", "std_test_score", "rank_test_score"]
+]
 cv_summary = cv_summary.sort_values("rank_test_score").head(10)
 with open(cv_path, "w") as f:
     json.dump(cv_summary.to_dict(orient="records"), f, indent=2, default=str)
